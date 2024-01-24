@@ -1,0 +1,396 @@
+<html>
+<head>
+    <title >task</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <br>
+    <br>
+    <br>
+    <h1>Chapter 4. Preparing VTAM<br>___________________________________________________________________
+
+</h1>
+    <div>To define the NetView program to VTAM, you need to:
+</div>
+    
+    <div>⦁	Modify the application (APPL) major node.<br>
+⦁	Review VTAM and NCP definitions for mode table and unformatted system service (USS) table changes.<br>
+⦁	Review VTAM start options.
+
+</div>
+    <h1>Modifying the Application (APPL) Major Node<br>___________________________________________________________________________________________</h1>
+    
+    <div>The APPL statements for the NetView tasks are located in the A01APPLS (CNMS0013) member. If you ran the CNMSJ000 job (described in “Changing Sample Installation Jobs Using the CNMSJ000 Job” on page 23) to create the VTAM APPL major node, then most of the modifications to your A01APPLS major node are already done.<br>
+Add this member to your VTAM configuration list so it is included by the status monitor preprocessor and started. The VTAM configuration list used in the samples is ATCCON01 (CNMS0003). You might need to change some of these statements or rename this member.
+</div>
+    <pre>DSICRTR APPL AUTH=CNM,PRTCT=&CNMDOMN.
+</pre>
+    <div>If you change the APPL statement names, add the ACBNAME operand to each statement that you are changing. The ACBNAME must be the original APPL name that is supplied by IBM of the statement being changed. For example, you can rename:
+to
+</div>
+    
+    <pre>HN2CRTR APPL AUTH=CNM,PRTCT=&CNMDOMN.,ACBNAME=DSICRTR
+
+</pre>
+    <h6>Usage notes:
+</h6>
+    <div>⦁	You cannot change the corresponding task ID on the TASK definition in the CNMSTASK member in DSIPARM.
+⦁	All APPL statements with the CNM01 name prefix must follow the existing DOMAINID constraints.
+⦁	An APPL name prefixed with CNM01 cannot have its suffix changed. For example, CNM01LUC must retain the LUC suffix.
+⦁	Verify the original APPL name with the TASK statement in the CNMSTASK member. The MEM operand specifies the startup initialization member in DSIPARM.
+⦁	Command help panels reference the original APPL names.
+⦁	You cannot change BNJHWMON because of its downward compatibility with the BNJDSERV task.
+⦁	You cannot change ALIASAPL because it is necessary for the VTAM Alias Name Translation function to work.
+⦁	The ACBNAME keyword for CNM01VPD in A01APPLS must match the name in DSIVPARM.
+</div>
+    
+    <h6>Changing the Domain Name (DOMAINID)
+</h6>
+    <pre>&CNMDOMN.000 APPL AUTH=(NVPACE,SPO,ACQ,PASS),PRTCT=PW006,EAS=4,	X
+</pre>
+    <div>Set the domain ID (system variable &CNMDOMN) in SYS1.PARMLIB member IEASYMxx. If you do not set a system variable, change every occurrence of &CNMDOMN. in A01APPLS (CNMS0013) to the current domain ID. For example, if you changed the domain ID to CNM12, then change:
+to:
+</div>
+    <pre>CNM12000 APPL AUTH=(NVPACE,SPO,ACQ,PASS),PRTCT=PW006,EAS=4,	X
+</pre>
+    <h6>Note:
+</h6>
+    <div>1. If you code the optional ACBNAME operand on the APPL statement, it must match the APPL name in column 1. Therefore, if you change the DOMAIN name, you must also change ACBNAME.
+</div>
+    <h6>Changing the Password</h6>
+    
+    <pre>&CNMDOMN.000 APPL AUTH=(NVPACE,SPO,ACQ,PASS),PRTCT=&CNMDOMN.,EAS=4,	X
+</pre>
+    
+    <div>The original password on the ACBpassword keyword in the CNMSTPWD member is CNM01. If the value of the &CNMDOMN variable in the IEASYMxx member is different from CNM01 or if you change this password, change every occurrence of PRTCT in the A01APPLS (CNMS0013) member to the same value. For example, if you change the password to PW006, then change:
+to:
+</div>
+    <pre>&CNMDOMN.000 APPL AUTH=(NVPACE,SPO,ACQ,PASS),PRTCT=PW006,EAS=4,	X
+</pre>
+    
+    <h6>Defining the NetView Management Console to VTAM (LU<br> 6.2 only)
+</h6>
+    
+    <div>You can use TCP/IP or LU 6.2 to communicate between the NetView program and the NetView management console. If you use LU 6.2, the following APPL statement defines both the NetView system and the NetView management console:
+</div>
+    <h6>Defining the SNA Topology Manager to VTAM
+</h6>
+    
+    <div>VTAM uses APPL definitions for the SNA topology manager application. Sample definitions are included in member A01APPLS (CNMS0013). The APPL name for the SNA topology manager must match the APPLNAME specified in the VTAM section of the FLBSYSD initialization file used by the manager application.
+</div>
+    
+    
+    <center> <img src="WhatsApp Image 2024-01-24 at 15.13.43_c5df284d11.jpg"></center>
+    
+    <h6>Defining the VTAM Primary Program Operator Interface Task
+</h6>
+    
+    <div>The primary program operator interface (POI) task is defined with the statement:
+VTAM does not open more than one access method control block with AUTH=PPO specified. If you are migrating and running a previous release of the NetView program concurrently with the NetView program for verification or testing, change this statement from AUTH=(NVPACE,SPO) back to AUTH=(NVPACE,PPO).
+
+</div>
+    
+    <h6>Changing the Logmode Table (LOGMODE)
+</h6>
+    <pre>MODETAB=AMODETAB,DLOGMOD=DSILGMOD
+</pre>
+    
+    <div>The sample network has a logmode table named AMODETAB (CNMS0001) that includes logmode entries for NetView sessions. In A01APPLS (CNMS0013), the DLOGMOD operand for an application points to an entry in this logmode table. For example, the following operands are for the application &CNMDOMN.000:
+Check the DLOGMOD operands for your applications and ensure that they are pointing to the proper entries for your installation.
+</div>
+    
+    <h6>Defining Resources to the Status Monitor
+</h6>
+    
+    <pre>STATOPT='NETVIEW 000'
+</pre>
+    <div>The A01APPLS (CNMS0013) sample includes STATOPT statements that define resources to the status monitor. For example, the following statement is for the application &CNMDOMN.000:
+If you want to redefine the name of this resource, or any other resource, change the STATOPT statement.
+</div>
+    <img src="">
+    <h6>Defining Multiple Concurrent NetView Operators
+</h6>
+    <div>You can define tasks for multiple concurrent NetView operators using APPL statements, for example:
+You must specify an APPL statement for each concurrent NetView operator. Each APPL statement name contains a 3-character suffix which is a hexadecimal number in the range of 000–FFF. If you are starting autotasks before VTAM, you must have enough consecutively numbered APPL statements to allow each autotask to obtain one. The numbers after those reserved for the autotasks do not need consecutive suffixes.
+</div>
+    
+    <pre>DSI213I ACCESS TO 'CLSDST PASS' IS NOT AUTHORIZED
+</pre>
+    <div>To enable takeover or reconnect, include PASS value in your AUTH= definition. If PASS is not specified and a takeover or reconnect is attempted, the authorized receiver receives message DSI133I, and the operator attempting to log on receives the following message:
+If you are not using the status monitor preprocessor, define one APPL statement using wildcard characters (??) for multiple concurrent NetView operators. See the following example:
+</div>
+    <pre>&CNMDOMN.0?? APPL AUTH=(NVPACE,SPO,ACQ,PASS),PRTCT=&CNMDOMN. EAS=4,MODETAB=AMODETAB,DLOGMOD=DSILGMOD
+</pre>
+    
+    <div>The maximum number of concurrent users of NetView application LUs is 4096. Users of the NetView application LUs include the following operators and tasks:<br>
+⦁	Started hardcopy tasks (for LUs defined on HARDCOPY statements)<br>
+⦁	Started autotasks<br>
+⦁	Operators logged on through real or simulated terminals, the web browser, or the NetView management console client<br>
+Factors such as local system queue area (LSQA) storage and the number of tasks can affect the maximum limit for the number of concurrent users of NetView application LUs to be less than 4096.
+</div>
+    
+    <div>Using the REFRESH command, refresh DSIOPF to add or delete NetView operators and operator profiles and to change operator profile definitions while the NetView program is running. Changes to operator profile information (either NetView profiles or SAF NETVIEW segment) require the operator to log off and log back on for the changes to take effect.
+</div>
+    
+    <div>If not enough APPL statements are available for dynamically added operators after NetView is started, create a new APPL major node similar to A01APPLS. In this new member, you can define as many additional APPL statements as you need for new operators. You do not have to stop and restart the NetView program to use the new operators you defined. When you start this new major node, the application definition statement for the new operator becomes available for immediate use. If you are using alert forwarding, you need to define additional APPL statements.
+</div>
+    
+    <h6>Allowing for Additional TAF LU1 Operators
+</h6>
+    <div>Tasks for five concurrent terminal access facility (TAF) users of operator-control sessions are defined with APPL statements. The following example shows the first one:
+If you have more than five concurrent TAF users of operator control sessions, you need to add APPL statements.
+</div>
+    <div>Note: If the status monitor preprocessor is not used, you can define one APPL statement using the wildcard character (?). For example:
+
+</div>
+    <h6>Allowing for Additional TAF LU2 Operators
+</h6>
+    <div>Tasks for 20 concurrent TAF users of full-screen sessions are defined with APPL statements. The following example shows the first one:<br><br>
+If you have more than 20 concurrent TAF users of full-screen sessions, you need to add APPL statements.<br><br>
+Note: If the status monitor preprocessor is not used, you can define one APPL statement using the wildcard character (?). For example:
+</div>
+    
+    <h6>Defining Alias Names</h6>
+    <div>If you are using cross-network communication, you might need to use alias names to resolve duplicate resource names. With alias names, the name of the resource (such as a logical unit, a class of service, an SRCLU, or a logon mode table) from the sending network is translated to a name that is unique to the receiving network.<br>
+If you want to use the alias name translation facility provided by the NetView program, include an APPL definition statement for that application program in the application program major node. The name on the APPL definition statement must be ALIASAPL.
+</div>
+    <pre>ALIASAPL APPL AUTH=(CNM),PRTCT=&CNMDOMN.
+*	STATOPT='ALIAS TASK'
+</pre>
+    <div>The following example shows the APPL statement in A01APPLS:
+</div>
+    <div>The AUTH=CNM operand shows that this application program can use the communication network management (CNM) interface. The PRTCT=CNM01 operand specifies the NetView program password.
+</div>
+    
+    <pre>LABEL	ALIASMEM DSIALTAB
+</pre>
+
+    <div>Member DSIALATD contains the statement:
+</div>
+    
+    <div>This statement points to DSIALTAB, which contains examples of alias translation statements.
+</div>
+    <pre>LABEL	ALIASMEM DSIALTAB,YOURMEM
+</pre>
+    
+    <div>To add an alias data set member that defines one of your networks, add the member name to the statement in DSIALATD in the following way:<br><br>
+Create a data set member of the same name following the format of DSIALTAB to define your alias translations. You can add more than one member name to the same ALIASMEM statement.<br> Ensure that you either modify DSIALTAB with valid aliases or comment out the example statements provided.<br>
+Note: Do not use alias names to translate NetView APPL names, including the domain ID, and any names that are constructed from it; for example, A01M, A01M001, A02M, and A02M002.
+</div>
+
+    
+    <h6>ORIGNET Statement
+</h6>
+    
+    <pre>ORIGNET	netid
+</pre>
+    <div>For each member name you code on an ALIASMEM statement, code at least one ORIGNET definition statement for each network that requires alias name translations. The ORIGNET statement has the following format:
+</div>
+    <h6>Where:
+</h6>
+    
+    <h6>netid
+</h6>
+    
+    
+    <div>Is the network name as coded on the NETWORK statement for the CDRM major node, or on the VTAM NETID start option. This name always represents the network that knows the resource by its alias name.
+</div>
+    
+    <pre>ORIGNET NETA
+</pre>
+    
+    <diV>The following example shows this statement:
+</diV>
+    <h6>LU Statement</h6>
+    
+    <pre>LABEL	LU	realname,ownernet, aliasname[,ownersscp]
+</pre>
+    <div>If you have LUs with the same name in more than one network, code the LU name translation statement. With this name translation, the LU can be known in its owning network by its real name and in other networks by the assigned alias name. The LU statement has the following format:
+</div>
+    
+    <h6>Where:</h6>
+    <h6>realname
+</h6>
+    
+    <div>Is the LU name as it is defined in the domain where the LU resides.
+</div>
+    
+    <h6>ownernet
+</h6>
+    <div>Is the 1–8 character network name of the network where the LU is known by its realname.
+
+</div>
+    <h6>aliasname
+</h6>
+    
+    <div>Is the alias name for this LU that is used by the network specified on the ORIGNET definition statement.
+</div>
+    <h6>ownersscp
+</h6>
+    <div>Is the SSCP that owns the LU in the ownernet network. If you do not code ownersscp, the SSCP name is taken from the VTAM CDRSC definition statement.
+</div>
+    <pre>     ORIGNET NETA
+LABEL	LU TERM1,NETB,TERM1B
+</pre>
+    
+    <div>The following example shows this statement:
+</div>
+    
+    <h6>Class of Service Statement
+</h6>
+    
+    <div>In interconnected networks, the class-of-service (COS) names used in one network can be different from the names used in another network. However, two COS definitions can provide the same type of service. For example, NETA calls its fastest class of routes FAST, while NETB calls its fastest class of routes QUICK. The COS names are different, but the result in each case is the same: the fastest route is chosen. With alias names, you can make the COS name used in one network equivalent to a name in another network. Each network can use the name it knows and still get the class of service it expects.</div>
+    <pre>LABEL	COS	adjacnme,adjacnet,localnme
+</pre>
+    
+    <pre>LABEL	COS	adjacnme,adjacnet,localnme
+</pre>
+    
+    <h6>Where:
+</h6>
+    <h6>adjacnme
+</h6>
+    <div>Is the COS name defined in the adjacent or destination network that provides the class-of-service equivalent to the COS entry specified in the local-name class of service.</div>
+    
+    <h6>adjacnet
+</h6>
+    <div>Is the 1–8 character NETID of the adjacent network where the equivalent class of service is defined.
+</div>
+    
+<h6>localnme
+</h6>
+    
+    <div>Is the name of the class of service defined in the network specified on the ORIGNET definition statement.
+</div>
+    
+    <pre>
+         ORIGNET NETA
+LABEL	COS	QUICK,NETB,FAST
+
+</pre>
+    <div>The following example shows this statement:<br>
+You can use the same local name (or alias) within one network for different adjacent networks. Also, each adjacent name can be given any number of aliases or local names.
+</div>
+    <h6>MODE Statement
+</h6>
+    <div>In interconnected networks, the set of logon mode entry names used in one network can be different from the names used in another network. However, two logon mode entries with different names can result in the session parameters being the same. With the name translation facility, you can make a logon mode entry name used in one network equivalent to a name in another network. In this way, you can access the information in a logon mode table from another network without changing the logon procedures used in either network.
+</div>
+    <pre>LABEL	MODE	destname,destnet,localnme
+</pre>
+    <div>The MODE statement has the following format:
+</div>
+    
+    <h6>Where:
+</h6>
+    
+    <h6>destname
+</h6>
+   <div>Is the name of the logon mode entry defined in the destination network.
+</div> 
+    <h6>destnet
+</h6>
+    <div>Is the 1- to 8-character NETID of the destination network where the logon mode entry is known by its equivalent name.
+</div>
+    <h6>localnme
+</h6>
+    
+    <div>Is the name of the logon mode entry defined in the network specified on the ORIGNET statement.
+</div>
+    <pre>
+           ORIGNET NETA
+LABEL	MODE LOG1B,NETB,<br>LOG1A<br> ORIGNET NETB<br>
+LABEL	MODE LOG1A,NETA,LOG1B
+    
+</pre>
+    
+    <div>The following example shows this statement:<br>
+The logon mode entry name defined to NETA as LOG1A is known in NETB as LOG1B. The logon mode entry name defined to NETB as LOG1B is known in NETA as LOG1A.<br><br>
+For more information about rules for name translation, refer to the z/OS Communications Server library.
+
+</div>
+    <h1>Reviewing VTAM and NCP Definitions for<br> Mode Table and USS Table Changes	<br>_________________________________________________________________________________________
+</h1>
+    <div>The sample definitions include the A01SNA (CNMS0073) statement for SNA locally attached terminals, the A01LOCAL (CNMS0016) statement for non-SNA locally attached terminals, and your VTAM and NCP definitions for any mode table changes. Update your USS table for the NetView program and reflect that change in your definitions. The USS table is AUSSTAB (CNMS0011) in the samples.<br><br>
+Note: If you modify AUSSTAB, run CNMSJ006 to reassemble and link edit the table and carry out the changes.
+</div>
+    
+    <h1>Assembling VTAM Tables Using Job CNMSJ006	<br>_______________________________________________________
+</h1>
+    <div>Job CNMSJ006 assembles and link-edits the following tables and places them in NETVIEW.V6R3USER.VTAMLIB:<br><br>
+⦁	AMODETAB, which is the logmode table supporting miscellaneous devices defined in the sample network<br>
+⦁	AUSSTAB, which is the USS table supporting SNA synchronous data link control<br>
+⦁	ISTSDCOS, which is the class-of-service table containing routes. To assemble VTAM tables:<br>
+⦁	Edit CNMSJ006 in the NETVIEW.V6R3USER.INSTALL data set.<br><br>
+Note:<br>
+⦁	The ISTMGC00 table is included with VTAM as part of the ISTMGC01 table. The ISTMGC01 table is a default routing table included with VTAM. This table tells VTAM to route unsolicited request units (RUs) to the NetView program so they can be received and routed to components such as the hardware monitor and the session monitor.<br>
+⦁	Verify that the mode entries for DSIL6MOD, PARALLEL, and RBRIDGE from CNMS0001 (AMODETAB) are in your current AMODETAB member in VTAMLST.<br>
+⦁	The sample job CNMSJ006 provided in &PGMNAME uses the High Level Assembler ASMA90. To use Assembler H, change the program name to PGM=IEV90.<br>
+⦁	Run CNMSJ006.<br>
+⦁	NETVIEW.V6R3USER.CNM01.VTAMLST has two members that define local terminal support:<br>
+⦁	A01LOCAL (CNMS0016) for non-SNA channel-attached terminals<br>
+⦁	A01SNA (CNMS0073) for SNA channel-attached terminals<br><br><br>
+
+Verify that in the member you use, each CUADDR parameter is the correct address for your host local terminals. Also, be sure that the node name references these addresses. These members reference the AMODETAB and AUSSTAB tables.<br>
+⦁	Verify your return codes before continuing with the next step listed for your version and release. The changes to the tables take effect the next time you start VTAM or issue the VTAM command:
+</div>
+ <pre>
+MODIFY NET,TABLE,NEWTAB=AMODETAB,OPTION=LOAD
+</pre>   
+    
+ <center>   <img src="WhatsApp Image 2024-01-24 at 15.13.43_909d303111.jpg">
+    <h1>Reviewing VTAM Start Options	
+<br>____________________________________________________</h1>
+    <div>If you specify the VTAM start option MSGMOD, turn it off while running NetView command lists and NetView automation.<br><br>
+The NetView program supplies a sample VTAM startup member CNMS0010 which is copied to NETVIEW.V6R3USER.CNM01.VTAMLST as ATCSTR00. This sample specifies PPOLOG=NO because the PPOLOG=YES statement is not needed to keep the status monitor panels accurate. However, if you want all VTAM messages kept in the NetView log, take one of the following actions:<br>
+⦁	Specify PPOLOG=YES in the ATCSTR00 member to activate the PPOLOG feature of the VTAM program. This causes the VTAM program to send copies of all messages to the Programed Operator Interface in the NetView program. These copies are logged to both netlog and Canzlog. (Note that the original messages are already in Canzlog.)<br>
+The PPOLOG copies of the messages are not automated; the original messages are subject to automation. To reduce duplication, code NETLOG(NO) for any automation of VTAM messages when you use the PPOLOG feature.<br><br>
+⦁	Specify PPOLOG=NO and force the unsolicited VTAM messages to the NetView log using the automation table or the ASSIGN command. If you only specify PPOLOG=NO, VTAM commands issued outside the NetView program are not recorded in the NetView log unless a match in the automation table or an ASSIGN command for the message exists.
+</div>
+    
+     <center>  <img src="WhatsApp Image 2024-01-24 at 15.27.12_fcec19be444.jpg"></center>
+    
+    <h1>Modifying the VTAM Start Procedure	<br>_____________________________________________
+</h1>
+    <div
+         >The sample VTAM start procedure provided with the NetView program is located in the CNMNET (CNMSJ008) member. Review this sample procedure and make the following updates to the VTAM start procedure that you are using:
+</div>
+    <pre>⦁	//	DD DISP=SHR,DSN=NETVIEW.V6R3USER.CNM01.VTAMLST
+</pre>
+    <div>⦁	Add the following data set to the concatenated list of data sets in the VTAMLST DD statement (add this data set before SYS1.VTAMLST):<br>
+The VTAMLST data set that is shipped with the NetView program contains data set members that you might have already customized. Protect any members that you customized. Otherwise, the VTAM program does not perform as expected.<br>
+⦁	Add the following data sets to the VTAMLIB DD statement:<br>
+⦁	Add the USER.VTAM data set before the SYS1.VTAMLIB data set
+</div>
+    
+    <pre>//	DD DISP=SHR,DSN=NETVIEW.V6R3USER.VTAMLIB
+</pre>
+    
+    <pre>⦁	//	DD DISP=SHR,DSN=NETVIEW.V6R3M0.SCNMLNK1
+</pre>
+    <div>⦁	If you plan to use the NetView Application Management Instrumentation, (AMI) or status monitor functions, add the SCNMLNK1 data set after the SYS1.VTAMLIB data set<br>
+The new VTAMLIB DD concatenation looks similar to the following example:
+</div>
+    
+<pre>//VTAMLIB	DD DISP=SHR,DSN=NETVIEW.V6R3USER.VTAMLIB
+//	DD DISP=SHR,DSN=SYS1.VTAMLIB
+//	DD DISP=SHR,DSN=NETVIEW.V6R3M0.SCNMLNK1
+</pre>
+    
+    <h6>Usage notes:
+</h6>
+    <div>⦁	Sample CNMSJ002 allocates the VTAMLST and VTAMLIB data sets. For more information, see “Allocating Data Sets Using the CNMSJ002 Job” on page 21.<br>
+⦁	If you added the SCNMLNK1 data set to the VTAMLIB DD statement, make sure that it is APF- authorized. For information about authorizing this data set, see “PROGxx” on page 11.<br>
+⦁	If you added the VTAMLIB data set to the VTAMLIB DD statement, make sure that it is APF-authorized. For information about authorizing this data set, see “PROGxx” on page 11.<br>
+⦁	The modifications you made to your VTAM start procedure go into effect when you restart the VTAM program.
+</div>
+    
+    <h1>Starting VTAM ACBs and Corresponding NetView<br> Tasks	<br>______________________________________________________
+</h1>
+    
+    <div>If a VTAM ACB and a corresponding NetView task are both active, and the ACB is deactivated and then reactivated, the NetView task typically becomes active. Some NetView tasks remain active when you end and restart VTAM without bringing NetView down. Other tasks become inactive but reactivate automatically when you restart VTAM.<br><br>
+DSICRTR, DSIGDS, BNJDSERV, ALIASAPL, and AAUTCNMI are examples of NetView tasks that remain active when the corresponding ACB becomes inactive.<br><br>
+VPDTASK, DSIAMLUT, CNM01VMT, CNM01BRW, and CNM01LUC are NetView tasks that become inactive when the corresponding ACB becomes inactive, but reactivate automatically when you restart VTAM. If you use a VTAM VARY INACT command to deactivate the ACB, you need to restart these NetView tasks after the ACB is reactivated. If you use a Z NET,QUICK command to deactivate the ACB, these NetView tasks are automatically reactivated when VTAM is restarted.<br>
+When NetView recognizes that VTAM is active, it invokes CLIST CNMEVTAM. This runs under the PPT. At this time the PPT ACB and the main NetView ACB are open.
+</div><br><br>
+
+    </body></html>

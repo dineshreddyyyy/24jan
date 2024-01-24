@@ -1,0 +1,29 @@
+h1{
+  margin-left: 250px;
+    margin-right: 250px;
+color: dodgerblue;
+}
+
+p{
+     margin-right: 250px;
+  margin-left: 250px;
+font-size: 16px;
+
+}
+h6{
+    margin-left: 200px;
+    font-size: 14px;
+}
+
+div{
+     
+  margin-right: 250px;
+  margin-left: 250px;
+    font-size: 16px;
+
+}
+pre{margin-left: 200px;
+     margin-right: 200px;
+ 
+    font-size: 12px;
+}
